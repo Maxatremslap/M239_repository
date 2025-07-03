@@ -1,13 +1,10 @@
 <?php
-$betreiberSite 	   = "mlaemmler.bplaced.net";
-$eigeneMailadresse = "max.laemmler@edu.tbz.ch";
-$empfaenger 	   =  $eigeneMailadresse;
-
-// echo "<pre>".print_r($_REQUEST, true)."</pre>"; //zum testen
-
+$betreiberSite 	   = "furniturestoresl239.ch";
+$eigeneMailadresse = "deine Mailadresse";
+$empfaenger 	   = $eigeneMailadresse; // Mail an den Betreiber
+$betreff 		   = "Kontaktformular";
 $mailNam 	= "";
 $mailAdr 		= "";
-$betreff		= "";
 $mailMsg  		= "";
 if (isset($_REQUEST["btn_mailclear"])) {
     $_REQUEST["btn_mailclear"] = false;
