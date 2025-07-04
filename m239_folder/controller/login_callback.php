@@ -11,8 +11,8 @@ $dbname   = 'furnitureshop_db';
 $benutzer = 'sadmin';
 $passwort = 'Sadminpassword1!';
 
-$googleClientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-$googleClientSecret = 'YOUR_GOOGLE_CLIENT_SECRET'; // Important: Store this securely!
+$googleClientId = '';
+$googleClientSecret = ''; // Important: Store this securely!
 $redirectUri = 'http://' . $_SERVER['HTTP_HOST'] . '/m239/controller/login_callback.php';
 
 try {
