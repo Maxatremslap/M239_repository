@@ -51,7 +51,7 @@ function formatCHF($amount) {
             right: 25px;
             width: 60px;
             height: 60px;
-            background-color: #dc3545;
+            background-color: #007bff; /* Changed to a more standard blue */
             border-radius: 50%;
             color: white;
             border: none;
@@ -431,23 +431,22 @@ function formatCHF($amount) {
     </footer>
     <!-- Footer Ends -->
 
-    <?php if (isset($_SESSION['user_id'])): ?>
-    <!-- Chat Widget -->
-    <div id="chat-widget-button" class="chat-widget-button">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5c-3.86 0-7-3.14-7-7s3.14-7 7-7s7 3.14 7 7c0 1.93-.78 3.68-2.05 4.95-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0C20.88 16.01 22 14.11 22 12c0-5.52-4.48-10-10-10zm-3.5 9c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm5 0c.83 0 1.5-.67 1.5-1.5S14.33 8 13.5 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-2.5 4c1.38 0 2.5-1.12 2.5-2.5H8.5c0 1.38 1.12 2.5 2.5 2.5z"/>
+    <?php if(isset($_SESSION['username'])): ?>
+    <!-- Chat Widget Button -->
+    <button class="chat-widget-button" id="chat-toggle-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-chat-dots-fill" viewBox="0 0 16 16">
+            <path d="M16 8c0 3.866-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.584.296-1.925.864-4.181 1.234-.2.032-.352-.176-.273-.362.354-.836.674-1.95.77-2.966C.744 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7zM5 8a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
         </svg>
-    </div>
+    </button>
 
-    <div id="chat-widget-window" class="chat-widget-window">
-        <div class="chat-widget-header">
-            Chat with Support
-        </div>
-        <div id="chat-widget-messages" class="chat-widget-messages">
-            <!-- Messages will be injected here -->
+    <!-- Chat Widget Window -->
+    <div class="chat-widget-window" id="chat-widget">
+        <div class="chat-widget-header">Live Chat Support</div>
+        <div class="chat-widget-messages" id="chat-messages">
+            <!-- Messages will be loaded here -->
         </div>
         <div class="chat-widget-input">
-            <input type="text" id="chat-input" placeholder="Type a message...">
+            <input type="text" id="chat-input" placeholder="Type your message...">
             <button id="chat-send-button">Send</button>
         </div>
     </div>
@@ -461,9 +460,91 @@ function formatCHF($amount) {
     <script src="../assets/js/custom.js"></script>
     <script src="../assets/js/owl.js"></script>
 
+    <?php if(isset($_SESSION['username'])): ?>
     <script>
-        // Chat widget JavaScript will go here
-    </script>
+        $(document).ready(function() {
+            const chatWidget = $('#chat-widget');
+            const chatToggleButton = $('#chat-toggle-button');
+            const chatMessages = $('#chat-messages');
+            const chatInput = $('#chat-input');
+            const chatSendButton = $('#chat-send-button');
 
-</body>
+            let lastMessageId = 0;
+            let pollingInterval;
+
+            function fetchMessages() {
+                $.ajax({
+                    url: '../controller/chat_handler.php',
+                    type: 'GET',
+                    data: { action: 'fetch', last_id: lastMessageId },
+                    dataType: 'json',
+                    success: function(messages) {
+                        if (messages.length > 0) {
+                            messages.forEach(function(msg) {
+                                const messageClass = msg.sender.toLowerCase() === 'admin' ? 'admin' : 'user';
+                                const messageElement = $(
+                                    '<div class="chat-message ' + messageClass + '">' +
+                                        '<strong>' + $('<div />').text(msg.sender).html() + '</strong>' +
+                                        $('<div />').text(msg.message).html() +
+                                    '</div>'
+                                );
+                                chatMessages.append(messageElement);
+                                lastMessageId = msg.id;
+                            });
+                            // Scroll to the bottom
+                            chatMessages.scrollTop(chatMessages[0].scrollHeight);
+                        }
+                    },
+                    error: function() {
+                        console.error('Failed to fetch chat messages.');
+                    }
+                });
+            }
+
+            function sendMessage() {
+                const message = chatInput.val().trim();
+                if (message === '') {
+                    return;
+                }
+
+                $.ajax({
+                    url: '../controller/chat_handler.php',
+                    type: 'POST',
+                    data: { action: 'send', message: message },
+                    success: function() {
+                        chatInput.val('');
+                        fetchMessages(); // Fetch immediately after sending
+                    },
+                    error: function() {
+                        console.error('Failed to send message.');
+                    }
+                });
+            }
+
+            chatToggleButton.on('click', function() {
+                const isVisible = chatWidget.is(':visible');
+                chatWidget.css('display', isVisible ? 'none' : 'flex');
+                
+                if (!isVisible) {
+                    lastMessageId = 0; // Reset on open to get full history
+                    chatMessages.html(''); // Clear previous messages
+                    fetchMessages();
+                    pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+                } else {
+                    clearInterval(pollingInterval);
+                }
+            });
+
+            chatSendButton.on('click', sendMessage);
+
+            chatInput.on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+    <?php endif; ?>
+
+  </body>
 </html>
