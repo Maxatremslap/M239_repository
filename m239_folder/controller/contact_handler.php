@@ -27,16 +27,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // --- Server settings ---
         // You will get these details from your email provider (e.g., SendGrid, Mailgun, or your own mail server)
         $mail->isSMTP();
-        $mail->Host       = 'smtp.example.com'; // Your SMTP server
+        $mail->Host       = '178.197.231.44'; // Your SMTP server's public IP
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'user@example.com'; // Your SMTP username
-        $mail->Password   = 'your_smtp_password'; // Your SMTP password
+        $mail->Username   = 'admin@furniturestoresl239.ch'; // Your full hMailServer email address
+        $mail->Password   = 'admin'; // Your SMTP password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
         // --- Recipients ---
         // The 'From' address MUST be the same as your SMTP username for many providers
-        $mail->setFrom('user@example.com', $name); 
+        $mail->setFrom('admin@furniturestoresl239.ch', $name); 
         // This is the address where you want to receive the contact form submissions
         $mail->addAddress('contact@furniturestoresl239.ch', 'Max\'s Möbel');
         // Add a reply-to address, so you can reply directly to the user
