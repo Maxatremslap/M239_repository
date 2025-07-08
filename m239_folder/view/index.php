@@ -43,7 +43,103 @@ function formatCHF($amount) {
     <link rel="stylesheet" href="../assets/css/fontawesome.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/owl.css">
+
+    <style>
+        .chat-widget-button {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background-color: #dc3545;
+            border-radius: 50%;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .chat-widget-button svg {
+            width: 32px;
+            height: 32px;
+        }
+        .chat-widget-window {
+            display: none;
+            position: fixed;
+            bottom: 100px;
+            right: 25px;
+            width: 350px;
+            height: 450px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            flex-direction: column;
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+        .chat-widget-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            font-weight: bold;
+        }
+        .chat-widget-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-widget-input {
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+        .chat-widget-input input {
+            flex-grow: 1;
+            border: none;
+            padding: 15px;
+            outline: none;
+        }
+        .chat-widget-input button {
+            border: none;
+            background-color: #007bff;
+            color: white;
+            padding: 0 20px;
+            cursor: pointer;
+        }
+        .chat-message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 18px;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+        .chat-message.user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .chat-message.admin {
+            background-color: #e9e9eb;
+            color: #333;
+            align-self: flex-start;
+        }
+        .chat-message strong {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.8em;
+        }
+    </style>
+
 </head>
+
 <body>
     <!-- Header -->
     <header>
@@ -321,12 +417,53 @@ function formatCHF($amount) {
         </div>
     </div>
 
+    <!-- Footer Starts -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="inner-content">
+                        <p>Copyright &copy; 2025 Max's Möbel - Design: <a rel="nofollow noopener" href="https://www.templateflip.com" target="_blank">TemplateFlip</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer Ends -->
+
+    <?php if (isset($_SESSION['user_id'])): ?>
+    <!-- Chat Widget -->
+    <div id="chat-widget-button" class="chat-widget-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5c-3.86 0-7-3.14-7-7s3.14-7 7-7s7 3.14 7 7c0 1.93-.78 3.68-2.05 4.95-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0C20.88 16.01 22 14.11 22 12c0-5.52-4.48-10-10-10zm-3.5 9c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm5 0c.83 0 1.5-.67 1.5-1.5S14.33 8 13.5 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-2.5 4c1.38 0 2.5-1.12 2.5-2.5H8.5c0 1.38 1.12 2.5 2.5 2.5z"/>
+        </svg>
+    </div>
+
+    <div id="chat-widget-window" class="chat-widget-window">
+        <div class="chat-widget-header">
+            Chat with Support
+        </div>
+        <div id="chat-widget-messages" class="chat-widget-messages">
+            <!-- Messages will be injected here -->
+        </div>
+        <div class="chat-widget-input">
+            <input type="text" id="chat-input" placeholder="Type a message...">
+            <button id="chat-send-button">Send</button>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Additional Scripts -->
-    <script src="assets/js/custom.js"></script>
-    <script src="assets/js/owl.js"></script>
+    <script src="../assets/js/custom.js"></script>
+    <script src="../assets/js/owl.js"></script>
+
+    <script>
+        // Chat widget JavaScript will go here
+    </script>
+
 </body>
 </html>

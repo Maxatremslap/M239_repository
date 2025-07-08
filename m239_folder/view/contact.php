@@ -13,14 +13,6 @@
     <link rel="stylesheet" href="../assets/css/fontawesome.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/owl.css">
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            // Initialize EmailJS with your User ID
-            emailjs.init("YOUR_USER_ID"); // Replace with your actual EmailJS User ID
-        })();
-    </script>
 </head>
 <body>
     <div id="preloader">
@@ -129,10 +121,20 @@
                     </div>
                 </div>
                 <!-- This div will display the response message -->
-                <div id="mailMessage"></div>
+                <div class="col-md-12">
+                <?php if (isset($_SESSION['mail_status'])): ?>
+                    <div class="alert alert-<?php echo $_SESSION['mail_status_type']; ?> alert-dismissible fade show" role="alert">
+                        <?php echo $_SESSION['mail_status']; ?>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <?php unset($_SESSION['mail_status']); unset($_SESSION['mail_status_type']); ?>
+                <?php endif; ?>
+                </div>
                 <div class="col-md-8">
                     <div class="contact-form">
-                        <form id="contact">
+                        <form id="contact" action="../controller/contact_handler.php" method="post">
                             <div class="row">
                                 <div class="col-lg-12 col-md-12 col-sm-12">
                                     <fieldset>
@@ -254,56 +256,5 @@
     <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/custom.js"></script>
     <script src="../assets/js/owl.js"></script>
-
-    <!-- EmailJS script to handle the contact form submission -->
-    <script>
-    $(document).ready(function() {
-        $("#contact").submit(function(e) {
-            e.preventDefault();
-            
-            // Show loading state
-            $("#form-submit").prop("disabled", true).text("Sending...");
-            
-            // Prepare template parameters
-            const templateParams = {
-                from_name: $("#name").val(),
-                from_email: $("#email").val(),
-                subject: $("#subject").val(),
-                message: $("#message").val()
-            };
-            
-            // Send email using EmailJS
-            emailjs.send("service_y15d61q", "YOUR_TEMPLATE_ID", templateParams)
-                .then(function(response) {
-                    console.log("SUCCESS!", response.status, response.text);
-                    
-                    // Show success message
-                    const msgHtml = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-                        'Your message has been sent successfully. We will get back to you soon!' +
-                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                        '<span aria-hidden="true">&times;</span></button></div>';
-                    
-                    $("#mailMessage").html(msgHtml);
-                    
-                    // Reset form
-                    $("#contact")[0].reset();
-                }, function(error) {
-                    console.log("FAILED...", error);
-                    
-                    // Show error message
-                    const msgHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
-                        'Failed to send message. Please try again later.' +
-                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                        '<span aria-hidden="true">&times;</span></button></div>';
-                    
-                    $("#mailMessage").html(msgHtml);
-                })
-                .finally(function() {
-                    // Reset button state
-                    $("#form-submit").prop("disabled", false).text("Send Message");
-                });
-        });
-    });
-    </script>
 </body>
 </html>
