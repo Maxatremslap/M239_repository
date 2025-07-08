@@ -41,30 +41,13 @@ if (isset($_SESSION['error_message'])) {
     unset($_SESSION['error_message']);
 }
 
-// Handle Google registration completion if needed
-if (isset($_GET['complete_google_registration']) && isset($_SESSION['temp_google_data'])) {
-    $googleData = $_SESSION['temp_google_data'];
-    
-    // Generate username from email
-    $suggestedUsername = explode('@', $googleData['email'])[0];
-    
-    // Let's prepopulate the registration form instead of automatically creating an account
-    $autoUsername = $suggestedUsername;
-    $autoEmail = $googleData['email'];
-    $message = "Please complete your registration with a username of your choice.";
-    $message_type = "info";
-}
-
 // Registration processing
 if (isset($_POST['register'])) {
-    $username = trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING));
+    $username = trim(htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8'));
     $password_input = $_POST['password'];
     $email = isset($_POST['email']) ? trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)) : null;
-    
-    // Check if this is a Google registration completion
-    $isGoogleCompletion = isset($_POST['google_completion']) && $_POST['google_completion'] === '1';
-    
-    if (empty($username) || (empty($password_input) && !$isGoogleCompletion)) {
+
+    if (empty($username) || empty($password_input)) {
         $message = "Bitte alle Felder ausfüllen.";
     } else {
         // Check if username already exists
@@ -76,77 +59,44 @@ if (isset($_POST['register'])) {
         if ($usernameExists > 0) {
             $message = "Dieser Benutzername ist bereits vergeben. Bitte wählen Sie einen anderen.";
         } else {
-            if ($isGoogleCompletion && isset($_SESSION['temp_google_data'])) {
-                // Google OAuth completion registration
-                $googleData = $_SESSION['temp_google_data'];
-                
-                // Generate a random password for Google users
-                $randomPassword = bin2hex(random_bytes(16));
-                $hashedPassword = password_hash($randomPassword, PASSWORD_DEFAULT);
-                
-                $sql = 'INSERT INTO users (username, password, email, google_id, profile_picture) 
-                        VALUES (:username, :password, :email, :google_id, :profile_picture)';
-                        
-                $statement = $pdo->prepare($sql);
-                $statement->execute([
+            // Standard registration
+            $password = password_hash($password_input, PASSWORD_DEFAULT);
+            
+            // Check if we need to add email
+            if (!empty($email)) {
+                $sql = 'INSERT INTO users (username, password, email) VALUES (:username, :password, :email)';
+                $params = [
                     ':username' => $username,
-                    ':password' => $hashedPassword,
-                    ':email' => $googleData['email'],
-                    ':google_id' => $googleData['sub'] ?? null,
-                    ':profile_picture' => $googleData['picture'] ?? null
-                ]);
-                
-                // Clean up the temporary data
-                unset($_SESSION['temp_google_data']);
-                
-                // Automatically log in after registration
-                $_SESSION['username'] = $username;
-                $_SESSION['email'] = $googleData['email'];
-                $_SESSION['google_user'] = true;
-                
-                // Redirect to home page
-                header("Location: index.php");
-                exit();
+                    ':password' => $password,
+                    ':email' => $email
+                ];
             } else {
-                // Standard registration
-                $password = password_hash($password_input, PASSWORD_DEFAULT);
-                
-                // Check if we need to add email
-                if (!empty($email)) {
-                    $sql = 'INSERT INTO users (username, password, email) VALUES (:username, :password, :email)';
-                    $params = [
-                        ':username' => $username,
-                        ':password' => $password,
-                        ':email' => $email
-                    ];
-                } else {
-                    $sql = 'INSERT INTO users (username, password) VALUES (:username, :password)';
-                    $params = [
-                        ':username' => $username,
-                        ':password' => $password
-                    ];
-                }
-                
-                $statement = $pdo->prepare($sql);
-                $statement->execute($params);
-
-                // Automatically log in after registration
-                $_SESSION['username'] = $username;
-                if (!empty($email)) {
-                    $_SESSION['email'] = $email;
-                }
-                
-                // Redirect to current page
-                header("Location: " . $_SERVER['PHP_SELF']);
-                exit();
+                $sql = 'INSERT INTO users (username, password) VALUES (:username, :password)';
+                $params = [
+                    ':username' => $username,
+                    ':password' => $password
+                ];
             }
+            
+            $statement = $pdo->prepare($sql);
+            $statement->execute($params);
+
+            // Automatically log in after registration
+            $_SESSION['username'] = $username;
+            if (!empty($email)) {
+                $_SESSION['email'] = $email;
+            }
+            
+            // Redirect to current page
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
         }
     }
 }
 
 // Login processing
 if (isset($_POST['login'])) {
-    $username = trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING));
+    $username = trim(htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8'));
     $password = $_POST['password'];
 
     if (empty($username) || empty($password)) {
@@ -236,51 +186,6 @@ if (isset($_POST['login'])) {
       border-radius: 10px 10px 0 0 !important;
       padding: 15px 20px;
     }
-    
-    .btn-google {
-      background-color: #fff;
-      color: #757575;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-weight: 500;
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px;
-      transition: background-color 0.3s;
-    }
-    
-    .btn-google:hover {
-      background-color: #f5f5f5;
-    }
-    
-    .btn-google img {
-      width: 20px;
-      margin-right: 10px;
-    }
-    
-    .or-divider {
-      display: flex;
-      align-items: center;
-      margin: 20px 0;
-      color: #757575;
-    }
-    
-    .or-divider:before,
-    .or-divider:after {
-      content: "";
-      flex: 1;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    .or-divider:before {
-      margin-right: 10px;
-    }
-    
-    .or-divider:after {
-      margin-left: 10px;
-    }
   </style>
 </head>
 <body>
@@ -363,41 +268,6 @@ if (isset($_POST['login'])) {
       <div class="alert alert-<?php echo $message_type; ?>" role="alert"><?php echo getSafeInput($message); ?></div>
     <?php endif; ?>
     
-    <?php if (isset($_GET['complete_google_registration']) && isset($_SESSION['temp_google_data'])): ?>
-      <!-- Google Registration Completion Form -->
-      <div class="row justify-content-center">
-        <div class="col-md-8">
-          <div class="card shadow-sm mb-4">
-            <div class="card-header bg-info text-white">
-              <h2 class="h5 mb-0">Complete Your Registration</h2>
-            </div>
-            <div class="card-body">
-              <p>You're signing up with Google. Please choose a username for your account:</p>
-              
-              <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                <input type="hidden" name="google_completion" value="1">
-                
-                <div class="form-group">
-                  <label for="reg_username">Username</label>
-                  <input type="text" name="username" id="reg_username" class="form-control" 
-                         value="<?php echo isset($autoUsername) ? getSafeInput($autoUsername) : ''; ?>" 
-                         placeholder="Choose a username" required>
-                </div>
-                
-                <div class="form-group">
-                  <label for="reg_email">Email (from Google)</label>
-                  <input type="email" id="reg_email" class="form-control" 
-                         value="<?php echo isset($autoEmail) ? getSafeInput($autoEmail) : ''; ?>" 
-                         disabled>
-                </div>
-                
-                <button type="submit" name="register" class="btn btn-success btn-block">Complete Registration</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    <?php else: ?>
       <div class="row">
         <!-- Login Form -->
         <div class="col-md-6">
@@ -406,13 +276,6 @@ if (isset($_POST['login'])) {
               <h2 class="h5 mb-0">Login</h2>
             </div>
             <div class="card-body">
-              <!-- Google OAuth Login Button -->
-              <a href="https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com&redirect_uri=http://localhost/m239/controller/login_callback.php&response_type=code&scope=email%20profile" class="btn btn-google btn-block">
-                <img src="../assets/images/google-logo.png" alt="Google logo"> Continue with Google
-              </a>
-              
-              <div class="or-divider">OR</div>
-              
               <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                 <div class="form-group">
                   <label for="login_username">Username or Email</label>
@@ -435,13 +298,6 @@ if (isset($_POST['login'])) {
               <h2 class="h5 mb-0">Register</h2>
             </div>
             <div class="card-body">
-              <!-- Google OAuth Registration Button -->
-              <a href="https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com&redirect_uri=http://localhost/m239/controller/register_callback.php&response_type=code&scope=email%20profile" class="btn btn-google btn-block">
-                <img src="../assets/images/google-logo.png" alt="Google logo"> Register with Google
-              </a>
-              
-              <div class="or-divider">OR</div>
-              
               <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                 <div class="form-group">
                   <label for="reg_username">Username</label>
@@ -461,7 +317,6 @@ if (isset($_POST['login'])) {
           </div>
         </div>
       </div>
-    <?php endif; ?>
   </div>
   
   <!-- Call to Action -->
@@ -505,62 +360,5 @@ if (isset($_POST['login'])) {
   <script src="../assets/js/custom.js"></script>
   <script src="../assets/js/owl.js"></script>
   
-  <!-- Google OAuth Script -->
-  <script>
-    // Client ID from Google Developer Console
-    const googleClientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-    
-    // Redirect URIs for login and registration
-    const loginRedirectUri = window.location.origin + '/login_callback.php';
-    const registerRedirectUri = window.location.origin + '/register_callback.php';
-    
-    // Function to initiate Google Login
-    function initiateGoogleLogin() {
-      // Google OAuth 2.0 endpoint
-      const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
-      
-      // Parameters for OAuth request
-      const params = {
-        client_id: googleClientId,
-        redirect_uri: loginRedirectUri,
-        response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-        state: 'login',
-        prompt: 'select_account',
-        access_type: 'offline'
-      };
-      
-      // Build the OAuth URL
-      const url = `${oauth2Endpoint}?${Object.entries(params).map(([key, value]) => 
-        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')}`;
-      
-      // Redirect to Google Sign-in
-      window.location.href = url;
-    }
-    
-    // Function to initiate Google Registration
-    function initiateGoogleRegistration() {
-      // Google OAuth 2.0 endpoint
-      const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
-      
-      // Parameters for OAuth request
-      const params = {
-        client_id: googleClientId,
-        redirect_uri: registerRedirectUri,
-        response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-        state: 'register',
-        prompt: 'select_account',
-        access_type: 'offline'
-      };
-      
-      // Build the OAuth URL
-      const url = `${oauth2Endpoint}?${Object.entries(params).map(([key, value]) => 
-        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')}`;
-      
-      // Redirect to Google Sign-in
-      window.location.href = url;
-    }
-  </script>
 </body>
 </html>
