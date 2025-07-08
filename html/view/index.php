@@ -51,7 +51,7 @@ function formatCHF($amount) {
             right: 25px;
             width: 60px;
             height: 60px;
-            background-color: #007bff; /* Changed to a more standard blue */
+            background-color: #007bff;
             border-radius: 50%;
             color: white;
             border: none;
